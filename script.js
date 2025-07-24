@@ -1,18 +1,25 @@
-const temperaturas = [
-    {id: 1, temperatura: 23.9},
-    {id: 2, temperatura: 25.4},
-    {id: 3, temperatura: 21.1},
-    {id: 4, temperatura: 32.7}
-]
+let clienteWeb = null;
 
-function simularLeitura() { 
+const clientId = 'Esp32' + Math.floor(Math.random() * 900) + 100;
+clienteWeb = new Paho.MQTT.Client('broker.hivemq.com', 8884, clientId);
 
-    // Math.floor faz o arredondamento
-    // Math.random gera um número aleatorio menor que 1
-    const numeroSorteado = Math.floor(Math.random() * temperaturas.length)
+// Obtem acesso ao elemento do HTML
+const tempPagina = document.getElementById("temperatura")
 
-    const tempSorteada = temperaturas[numeroSorteado].temperatura
+clienteWeb.onMessageArrived = function(message) {
+    const payload = message.payloadString;
+    const dados = JSON.parse(payload)
 
-    const temperaturaPagina = document.getElementById("temperatura")
-    temperaturaPagina.textContent = tempSorteada
+    tempPagina.textContent = String(dados.temperatura) + " °C"
 }
+
+clienteWeb.connect({   
+    useSSL: true, 
+    onSuccess: function() {
+        alert('A conexão com Broker foi bem sucedida')
+        clienteWeb.subscribe('senai510/temperatura');
+    },
+    onFailure: function() {
+        alert('A conexão com Broker falhou')
+    }
+});
